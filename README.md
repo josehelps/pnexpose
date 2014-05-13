@@ -4,11 +4,7 @@ pnexpose
 ## Overview
 
 **pnexpose**, python client library for nexpose.
-It has been forked from: 
-
-<https://code.google.com/p/pynexpose/>
-
-also with some help from [Damian](https://github.com/damianf-r7) expose python client library 
+It has been forked from: <https://code.google.com/p/pynexpose/> also with some help from [Damian](https://github.com/damianf-r7) 
 
 ### Using
 
