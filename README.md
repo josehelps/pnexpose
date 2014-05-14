@@ -9,6 +9,7 @@ It has been forked from: <https://code.google.com/p/pynexpose/> also with some h
 ### Using
 
 Requirements:
+
 * urllib2
 * base64
 * random
@@ -16,7 +17,16 @@ Requirements:
 * a nexpose server
 
 Just import and go, refer to the [test client](https://github.com/divious1/pnexpose/blob/master/test_client.py) for functioning examples
+### Installing 
+**Tested in Ubuntu 14.04 LTS**
 
+install dependecy
+
+`apt-get install python-lxml`
+
+to test:
+
+`python test_client.py`
 
 #### Want to add more commands 
 I utilized their API XML guide here:
