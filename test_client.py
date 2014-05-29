@@ -17,8 +17,11 @@ query = """SELECT fa.vulnerability_instances, fa.affected_assets, fa.most_recent
 
 #creates a nexposeClient object
 nexposeClient = pnexpose.nexposeClient(serveraddr, port, username, password)
-#response = n.report_listing()
-#print response
+
+#EXAMPLE 1
+#Print reports available 
+response = n.report_listing()
+print response
 
 #EXAMPLE 2
 #makes ad_hoc report queries using sql on specific sites
@@ -33,9 +36,7 @@ JOIN fact_asset_discovery fad USING (asset_id) \
 #call requires site ids in an array
 sites = [1,2]
 
-
 response = nexposeClient.adhoc_report(query,sites)
-
 #response is a csv with the results
 print response
 
