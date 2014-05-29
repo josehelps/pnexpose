@@ -12,9 +12,6 @@ query = """SELECT fa.vulnerability_instances, fa.affected_assets, fa.most_recent
          where affected_assets > 0"""
 
 
-#EXMAPLE 1
-#prints report listings
-
 #creates a nexposeClient object
 nexposeClient = pnexpose.nexposeClient(serveraddr, port, username, password)
 
