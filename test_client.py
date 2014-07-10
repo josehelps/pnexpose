@@ -17,7 +17,7 @@ nexposeClient = pnexpose.nexposeClient(serveraddr, port, username, password)
 
 #EXAMPLE 1
 #Print reports available 
-response = n.report_listing()
+response = nexposeClient.report_listing()
 print response
 
 #EXAMPLE 2
