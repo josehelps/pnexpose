@@ -42,7 +42,7 @@ class nexposeClient():
         return response
 
     def asset_group_config(self, groupid):
-        response = self.request("SiteConfig", {"group-id" : groupid})
+        response = self.request("AssetGroupConfig", {"group-id" : groupid})
         return etree.tostring(response)
 
     def asset_group_delete(self, groupid):
@@ -79,7 +79,6 @@ class nexposeClient():
     def logout(self):
         response = self.request("Logout")
         return response.attrib['success']
-
 
     def report_generate(self, reportid):
         response = self.request("ReportConfig", {'report-id' : reportid})
@@ -124,6 +123,7 @@ class nexposeClient():
     def scan_stop(self, scanid):
         response = self.request("ScanStop", {'scan-id' : scanid})
         return etree.tostring(response)
+
     def site_config(self, siteid):
         response = self.request("SiteConfig", {"site-id" : siteid})
         return etree.tostring(response)
