@@ -14,10 +14,19 @@ def dump(obj):
 class SiteSummary():
     def __init__(self, description, id, name, risk_factor, risk_score):
         self.description = description
-        self.id = id
-        self.name = name
-        self.risk_factor = risk_factor
-        self.risk_score = risk_score
+        self.id = int(id)
+        self.name = str(name)
+        self.risk_factor = float(risk_factor)
+        self.risk_score = str(risk_score)
+        
+class EngineSummary():
+    def __init__(self, id, name, address, port, status, scope):
+        self.id = int(id)
+        self.name = str(name)
+        self.address = str(address)
+        self.port = int(port)
+        self.status = str(status)
+        self.scope = str(scope)
 
 # Creates class for the client
 class Connection():
@@ -82,7 +91,16 @@ class Connection():
 
     def engine_listing(self):
         response = self.request("EngineListing")
-        return etree.tostring(response)
+        engines = objectify.fromstring(etree.tostring(response))
+        enginesList = []
+        engineSummaryList = []
+        for engine in engines.EngineSummary:
+            enginesList.append(dict(engine.items()))
+
+        for engine in enginesList:
+            engineSummaryList.append(EngineSummary(engine['id'], engine['name'], engine['address'], engine['port'], engine['status'], engine['scope']))
+
+        return engineSummaryList
 
     def logout(self):
         response = self.request("Logout")
