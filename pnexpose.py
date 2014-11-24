@@ -112,23 +112,23 @@ class Connection():
         return response
 
     def asset_group_config(self, groupid):
-        response = self.request("AssetGroupConfig", {"group-id" : groupid})
+        response = request(self, "AssetGroupConfig", {"group-id" : groupid})
         return etree.tostring(response)
 
     def asset_group_delete(self, groupid):
-        response = self.request("AssetGroupDelete", {"group-id" : groupid})
+        response = request(self, "AssetGroupDelete", {"group-id" : groupid})
         return etree.tostring(response)
 
     def asset_group_listing(self):
-        response = self.request("AssetGroupListing")
+        response = request(self, "AssetGroupListing")
         return etree.tostring(response)
 
     def asset_group_save(self, groupid):
-        response = self.request("AssetGroupSave", {"group-id" : groupid})
+        response = request(self, "AssetGroupSave", {"group-id" : groupid})
         return etree.tostring(response)
 
     def device_delete(self, deviceid):
-        response = self.request("DeviceDelete", {"device-id" : deviceid})
+        response = request(self, "DeviceDelete", {"device-id" : deviceid})
         return etree.tostring(response)
 
     def download_report(self, reporturl):
@@ -139,7 +139,7 @@ class Connection():
         return resxml
 
     def engine_activity(self, engineid):
-        response = self.request("EngineActivity", {"engine-id" : engineid})
+        response = request(self, "EngineActivity", {"engine-id" : engineid})
         return etree.tostring(response)
 
     def list_engines(self):
@@ -156,63 +156,63 @@ class Connection():
         return engineSummaryList
 
     def logout(self):
-        response = self.request("Logout")
+        response = request(self, "Logout")
         return response.attrib['success']
 
     def report_generate(self, reportid):
-        response = self.request("ReportConfig", {'report-id' : reportid})
+        response = request(self, "ReportConfig", {'report-id' : reportid})
         return etree.tostring(response)
 
     def report_listing(self):
-        response = self.request("ReportListing")
+        response = request(self, "ReportListing")
         return etree.tostring(response)
 
     def report_template_listing(self):
-        response = self.request("ReportTemplateListing")
+        response = request(self, "ReportTemplateListing")
         return etree.tostring(response)
 
     def report_history(self, reportcfgid):
-        response = self.request("ReportHistory", {'reportcfg-id' : reportcfgid})
+        response = request(self, "ReportHistory", {'reportcfg-id' : reportcfgid})
         return etree.tostring(response)
 
     def restart(self):
-        response = self.request("Restart")
+        response = request(self, "Restart")
         return etree.tostring(response)
 
     def scan_activity(self):
-        response = self.request("ScanActivity")
+        response = request(self, "ScanActivity")
         return etree.tostring(response)
 
     def scan_pause(self, scanid):
-        response = self.request("ScanPause", {'scan-id' : scanid})
+        response = request(self, "ScanPause", {'scan-id' : scanid})
         return etree.tostring(response)
 
     def scan_resume(self, scanid):
-        response = self.request("ScanResume", {'scan-id' : scanid})
+        response = request(self, "ScanResume", {'scan-id' : scanid})
         return etree.tostring(response)
 
     def scan_statistics(self, scanid):
-        response = self.request("ScanStatistics", {'scan-id' : scanid})
+        response = request(self, "ScanStatistics", {'scan-id' : scanid})
         return etree.tostring(response)
 
     def scan_status(self, scanid):
-        response = self.request("ScanStatus", {'scan-id' : scanid})
+        response = request(self, "ScanStatus", {'scan-id' : scanid})
         return etree.tostring(response)
 
     def scan_stop(self, scanid):
-        response = self.request("ScanStop", {'scan-id' : scanid})
+        response = request(self, "ScanStop", {'scan-id' : scanid})
         return etree.tostring(response)
 
     def site_config(self, siteid):
-        response = self.request("SiteConfig", {"site-id" : siteid})
+        response = request(self, "SiteConfig", {"site-id" : siteid})
         return etree.tostring(response)
 
     def site_delete(self, siteid):
-        response = self.request("SiteDelete", {"site-id" : siteid})
+        response = request(self, "SiteDelete", {"site-id" : siteid})
         return etree.tostring(response)
 
     def site_device_listing(self, siteid):
-        response = self.request("SiteDeviceListing", {"site-id" : siteid})
+        response = request(self, "SiteDeviceListing", {"site-id" : siteid})
         return etree.tostring(response)
 
     def list_sites(self):
@@ -229,43 +229,43 @@ class Connection():
         return siteSummaryList
 
     def site_scan(self, siteid):
-        response = self.request("SiteScan", {"site-id" : siteid})
+        response = request(self, "SiteScan", {"site-id" : siteid})
         return etree.tostring(response)
 
     def site_scan_history(self, siteid):
-        response = self.request("SiteScanHistory", {"site-id" : siteid})
+        response = request(self, "SiteScanHistory", {"site-id" : siteid})
         return etree.tostring(response)
 
     def system_update(self):
-        response = self.request("SystemUpdate")
+        response = request(self, "SystemUpdate")
         return etree.tostring(response)
 
     def system_information(self):
-        response = self.request("SystemInformation")
+        response = request(self, "SystemInformation")
         return etree.tostring(response)
 
     def user_authenticator_listing(self):
-        response = self.request("UserAuthenticatorListing")
+        response = request(self, "UserAuthenticatorListing")
         return etree.tostring(response)
 
     def user_config(self, userid):
-        response = self.request("UserConfig", {"id" : userid})
+        response = request(self, "UserConfig", {"id" : userid})
         return etree.tostring(response)
 
     def user_delete(self, userid):
-        response = self.request("UserDelete", {"id" : userid})
+        response = request(self, "UserDelete", {"id" : userid})
         return etree.tostring(response)
 
     def user_listing(self):
-        response = self.request("UserListing")
+        response = request(self, "UserListing")
         return etree.tostring(response)
 
     def vulnerability_details(self, vulnid):
-        response = self.request("VulnerabilityDetails", {"vuln-id" : vulnid})
+        response = request(self, "VulnerabilityDetails", {"vuln-id" : vulnid})
         return etree.tostring(response)
 
     def vulnerability_listing(self):
-        response = self.request("VulnerabilityListing")
+        response = request(self, "VulnerabilityListing")
         return etree.tostring(response)
 
 
