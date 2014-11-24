@@ -2,6 +2,7 @@
 
 import urllib2
 from lxml import etree
+from lxml import objectify
 import random
 import base64
 
@@ -10,9 +11,16 @@ def dump(obj):
   for attr in dir(obj):
       print "obj.%s = %s" % (attr, getattr(obj, attr))
 
+class SiteSummary():
+    def __init__(self, description, id, name, risk_factor, risk_score):
+        self.description = description
+        self.id = id
+        self.name = name
+        self.risk_factor = risk_factor
+        self.risk_score = risk_score
 
 # Creates class for the client
-class nexposeClient():
+class Connection():
     def __init__(self, server, port, username, password):
         """ nexposeClient Class init call """
         self.server = server
@@ -138,7 +146,16 @@ class nexposeClient():
 
     def site_listing(self):
         response = self.request("SiteListing")
-        return etree.tostring(response)
+        sites = objectify.fromstring(etree.tostring(response))
+        sitesList = []
+        siteSummaryList = []
+        for site in sites.SiteSummary:
+            sitesList.append(dict(site.items()))
+
+        for site in sitesList:
+            siteSummaryList.append(SiteSummary(site['description'], site['id'], site['name'], site['riskfactor'], site['riskscore']))
+
+        return siteSummaryList
 
     def site_scan(self, siteid):
         response = self.request("SiteScan", {"site-id" : siteid})
