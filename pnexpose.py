@@ -10,6 +10,30 @@ import base64
 def dump(obj):
   for attr in dir(obj):
       print "obj.%s = %s" % (attr, getattr(obj, attr))
+      
+#Request parser
+def request(connection, call, parameters={}):
+    """ Processes a Request for an API call """
+    xml = etree.Element(call + "Request")
+
+    #if it has a token it adds it to the request 
+    if(connection.authtoken != ''):
+        xml.set('session-id',connection.authtoken)
+        xml.set('sync-id', str(random.randint(1,65535)))
+
+    #parses parameters from calls
+    for param,value in parameters.iteritems():
+        xml.set(param, str(value))
+    
+    #makes request and returns response
+    data=etree.tostring(xml)
+    request = urllib2.Request(connection.url + connection.api, data)
+    request.add_header('Content-Type', 'text/xml')
+    
+    response = urllib2.urlopen(request)
+    response = etree.XML(response.read())
+    return response
+        
 
 class SiteSummary():
     def __init__(self, description, id, name, risk_factor, risk_score):
@@ -18,6 +42,13 @@ class SiteSummary():
         self.name = str(name)
         self.risk_factor = float(risk_factor)
         self.risk_score = str(risk_score)
+        
+class Site():    
+    def __init__(self, name, scan_template):
+        self.name = name
+        self.scan_template = scan_template
+        
+    # def load(self, id)
         
 class EngineSummary():
     def __init__(self, id, name, address, port, status, scope):
@@ -49,8 +80,30 @@ class Connection():
     #Gets called in __init__
     def login(self):
         """ logs you into the device """
-        response = self.request("Login", {'user-id' : self.username, 'password' : self.password})
+        xml = etree.Element("LoginRequest")
+
+        #if it has a token it adds it to the request 
+        if(self.authtoken != ''):
+            xml.set('session-id',self.authtoken)
+            xml.set('sync-id', str(random.randint(1,65535)))
+
+        #parses parameters from calls
+        # for param,value in parameters.iteritems():
+            # xml.set(param, str(value))
+        xml.set('user-id', str(self.username))
+        xml.set('password', str(self.password))
+        
+        #makes request and returns response
+        data=etree.tostring(xml)
+        request = urllib2.Request(self.url + self.api, data)
+        request.add_header('Content-Type', 'text/xml')
+        
+        response = urllib2.urlopen(request)
+        response = etree.XML(response.read())
+   
+        # response = request("Login", {'user-id' : self.username, 'password' : self.password})
         self.authtoken = response.attrib['session-id']
+        return response
 
     #Contains custom request
     def adhoc_report(self,query,site_ids):
@@ -90,7 +143,7 @@ class Connection():
         return etree.tostring(response)
 
     def list_engines(self):
-        response = self.request("EngineListing")
+        response = request(self, "EngineListing")
         engines = objectify.fromstring(etree.tostring(response))
         enginesList = []
         engineSummaryList = []
@@ -163,7 +216,7 @@ class Connection():
         return etree.tostring(response)
 
     def list_sites(self):
-        response = self.request("SiteListing")
+        response = request(self, "SiteListing")
         sites = objectify.fromstring(etree.tostring(response))
         sitesList = []
         siteSummaryList = []
@@ -217,28 +270,7 @@ class Connection():
 
 
 
-    #Request parser
-    def request(self, call, parameters={}):
-        """ Processes a Request for an API call """
-        xml = etree.Element(call + "Request")
-
-        #if it has a token it adds it to the request 
-        if(self.authtoken != ''):
-            xml.set('session-id',self.authtoken)
-            xml.set('sync-id', str(random.randint(1,65535)))
-
-        #parses parameters from calls
-        for param,value in parameters.iteritems():
-            xml.set(param, str(value))
-        
-        #makes request and returns response
-        data=etree.tostring(xml)
-        request = urllib2.Request(self.url + self.api, data)
-        request.add_header('Content-Type', 'text/xml')
-        
-        response = urllib2.urlopen(request)
-        response = etree.XML(response.read())
-        return response
+    
     
     #adhoc report request parser
     def ad_hoc_report_request(self, call, query, site_id=[]):
