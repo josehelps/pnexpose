@@ -89,7 +89,7 @@ class Connection():
         response = self.request("EngineActivity", {"engine-id" : engineid})
         return etree.tostring(response)
 
-    def engine_listing(self):
+    def list_engines(self):
         response = self.request("EngineListing")
         engines = objectify.fromstring(etree.tostring(response))
         enginesList = []
@@ -162,7 +162,7 @@ class Connection():
         response = self.request("SiteDeviceListing", {"site-id" : siteid})
         return etree.tostring(response)
 
-    def site_listing(self):
+    def list_sites(self):
         response = self.request("SiteListing")
         sites = objectify.fromstring(etree.tostring(response))
         sitesList = []
