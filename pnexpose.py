@@ -36,19 +36,28 @@ def request(connection, call, parameters={}):
         
 
 class SiteSummary():
-    def __init__(self, description, id, name, risk_factor, risk_score):
+    def __init__(self, description, id, name, riskfactor, riskscore):
         self.description = description
         self.id = int(id)
         self.name = str(name)
-        self.risk_factor = float(risk_factor)
-        self.risk_score = str(risk_score)
+        self.riskfactor = float(riskfactor)
+        self.riskscore = str(riskscore)
         
 class Site():    
-    def __init__(self, name, scan_template):
-        self.name = name
-        self.scan_template = scan_template
-        
-    # def load(self, id)
+    def __init__(self, nameOrConn, templateOrID):
+        if nameOrConn.authtoken:
+            response = request(nameOrConn, "SiteConfig", {"site-id" : templateOrID})
+            siteData = objectify.fromstring(etree.tostring(response))
+            siteProperties = dict(siteData.Site.items())
+            self.id = int(siteProperties['id'])
+            self.name = siteProperties['name']
+            self.description = siteProperties['description']
+            self.riskfactor = float(siteProperties['riskfactor'])
+            self.isDynamic = siteProperties['isDynamic']
+            self.assets = list(siteData.Site.Hosts.host)
+        else:
+            self.name = nameOrConn
+            self.scan_template = templateOrID
         
 class EngineSummary():
     def __init__(self, id, name, address, port, status, scope):
