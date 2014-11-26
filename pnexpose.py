@@ -81,7 +81,7 @@ class nexposeClient():
         return response.attrib['success']
 
     def report_generate(self, reportid):
-        response = self.request("ReportConfig", {'report-id' : reportid})
+        response = self.request("ReportGenerate", {'report-id' : reportid})
         return etree.tostring(response)
 
     def report_listing(self):
