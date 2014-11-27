@@ -128,6 +128,10 @@ class nexposeClient():
         response = self.request("SiteConfig", {"site-id" : siteid})
         return etree.tostring(response)
 
+    def site_save(self, sitedtd):
+        response = self.request("SiteSave", appendelements=sitedtd)
+        return etree.tostring(response)
+
     def site_delete(self, siteid):
         response = self.request("SiteDelete", {"site-id" : siteid})
         return etree.tostring(response)
@@ -183,7 +187,7 @@ class nexposeClient():
 
 
     #Request parser
-    def request(self, call, parameters={}):
+    def request(self, call, parameters={}, appendelements=[]):
         """ Processes a Request for an API call """
         xml = etree.Element(call + "Request")
 
@@ -196,6 +200,9 @@ class nexposeClient():
         for param,value in parameters.iteritems():
             xml.set(param, str(value))
         
+        for el in appendelements:
+            xml.append(etree.fromstring(el))
+
         #makes request and returns response
         data=etree.tostring(xml)
         request = urllib2.Request(self.url + self.api, data)
