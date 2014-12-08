@@ -5,6 +5,8 @@ from lxml import etree
 import random
 import base64
 
+print_query = False
+
 #Dump Object Function
 def dump(obj):
   for attr in dir(obj):
@@ -261,7 +263,8 @@ class nexposeClient():
 
         #flatten the xml object
         data=etree.tostring(xml)
-        print "Making Query:\n", data, "\n"
+        if print_query:
+            print "Making Query:\n", data, "\n"
         request = urllib2.Request(self.url + self.api, data)
         request.add_header('Content-Type', 'application/xml')
         
