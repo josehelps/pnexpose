@@ -38,9 +38,9 @@ class nexposeClient():
         self.authtoken = response.attrib['session-id']
 
     #Contains custom request
-    def adhoc_report(self,query,site_ids):
+    def adhoc_report(self,query,site_ids,api_version='1.1.0'):
         """Takes in a query object in the for of SQL and an array with site ids"""
-        response = self.ad_hoc_report_request("ReportAdhocGenerate",query,site_ids)
+        response = self.ad_hoc_report_request("ReportAdhocGenerate",query,site_ids,api_version)
         return response
 
     def asset_group_config(self, groupid):
@@ -215,7 +215,11 @@ class nexposeClient():
         return response
     
     #adhoc report request parser
-    def ad_hoc_report_request(self, call, query, site_id=[]):
+    # By default API version 1.1.0 is used for the query, if you want to use
+    # a newer API version (for example to get access to some SQL dimensions
+    # and columns you can't see with 1.1.0, change api_version to something
+    # newer (like 1.3.2)
+    def ad_hoc_report_request(self, call, query, site_id=[], api_version='1.1.0'):
         """ Processes a Request for an API call """
         #Could be integrated into regular request, although it could complicate that function
         xml = etree.Element(call + "Request")
@@ -235,7 +239,7 @@ class nexposeClient():
         #create filters
         filter_ver = etree.Element("filter")
         filter_ver.set('type','version')
-        filter_ver.set('id','1.1.0')
+        filter_ver.set('id',api_version)
 
         filter_query = etree.Element("filter")
         filter_query.set('type','query') 
