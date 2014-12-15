@@ -5,6 +5,8 @@ from lxml import etree
 import random
 import base64
 
+print_query = False
+
 #Dump Object Function
 def dump(obj):
   for attr in dir(obj):
@@ -36,9 +38,9 @@ class nexposeClient():
         self.authtoken = response.attrib['session-id']
 
     #Contains custom request
-    def adhoc_report(self,query,site_ids):
+    def adhoc_report(self,query,site_ids,api_version='1.1.0'):
         """Takes in a query object in the for of SQL and an array with site ids"""
-        response = self.ad_hoc_report_request("ReportAdhocGenerate",query,site_ids)
+        response = self.ad_hoc_report_request("ReportAdhocGenerate",query,site_ids,api_version)
         return response
 
     def asset_group_config(self, groupid):
@@ -81,7 +83,7 @@ class nexposeClient():
         return response.attrib['success']
 
     def report_generate(self, reportid):
-        response = self.request("ReportConfig", {'report-id' : reportid})
+        response = self.request("ReportGenerate", {'report-id' : reportid})
         return etree.tostring(response)
 
     def report_listing(self):
@@ -126,6 +128,10 @@ class nexposeClient():
 
     def site_config(self, siteid):
         response = self.request("SiteConfig", {"site-id" : siteid})
+        return etree.tostring(response)
+
+    def site_save(self, sitedtd):
+        response = self.request("SiteSave", appendelements=sitedtd)
         return etree.tostring(response)
 
     def site_delete(self, siteid):
@@ -183,7 +189,7 @@ class nexposeClient():
 
 
     #Request parser
-    def request(self, call, parameters={}):
+    def request(self, call, parameters={}, appendelements=[]):
         """ Processes a Request for an API call """
         xml = etree.Element(call + "Request")
 
@@ -196,6 +202,9 @@ class nexposeClient():
         for param,value in parameters.iteritems():
             xml.set(param, str(value))
         
+        for el in appendelements:
+            xml.append(etree.fromstring(el))
+
         #makes request and returns response
         data=etree.tostring(xml)
         request = urllib2.Request(self.url + self.api, data)
@@ -206,7 +215,11 @@ class nexposeClient():
         return response
     
     #adhoc report request parser
-    def ad_hoc_report_request(self, call, query, site_id=[]):
+    # By default API version 1.1.0 is used for the query, if you want to use
+    # a newer API version (for example to get access to some SQL dimensions
+    # and columns you can't see with 1.1.0, change api_version to something
+    # newer (like 1.3.2)
+    def ad_hoc_report_request(self, call, query, site_id=[], api_version='1.1.0'):
         """ Processes a Request for an API call """
         #Could be integrated into regular request, although it could complicate that function
         xml = etree.Element(call + "Request")
@@ -226,7 +239,7 @@ class nexposeClient():
         #create filters
         filter_ver = etree.Element("filter")
         filter_ver.set('type','version')
-        filter_ver.set('id','1.1.0')
+        filter_ver.set('id',api_version)
 
         filter_query = etree.Element("filter")
         filter_query.set('type','query') 
@@ -254,7 +267,8 @@ class nexposeClient():
 
         #flatten the xml object
         data=etree.tostring(xml)
-        print "Making Query:\n", data, "\n"
+        if print_query:
+            print "Making Query:\n", data, "\n"
         request = urllib2.Request(self.url + self.api, data)
         request.add_header('Content-Type', 'application/xml')
         
