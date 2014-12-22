@@ -6,6 +6,8 @@ from lxml import objectify
 import random
 import base64
 
+print_query = False
+
 #Dump Object Function
 def dump(obj):
   for attr in dir(obj):
@@ -115,9 +117,9 @@ class Connection():
         return response
 
     #Contains custom request
-    def adhoc_report(self,query,site_ids):
+    def adhoc_report(self,query,site_ids,api_version='1.1.0'):
         """Takes in a query object in the for of SQL and an array with site ids"""
-        response = self.ad_hoc_report_request("ReportAdhocGenerate",query,site_ids)
+        response = self.ad_hoc_report_request("ReportAdhocGenerate",query,site_ids,api_version)
         return response
 
     def asset_group_config(self, groupid):
@@ -169,7 +171,7 @@ class Connection():
         return response.attrib['success']
 
     def report_generate(self, reportid):
-        response = request(self, "ReportConfig", {'report-id' : reportid})
+        response = request("ReportGenerate", {'report-id' : reportid})
         return etree.tostring(response)
 
     def report_listing(self):
@@ -214,6 +216,10 @@ class Connection():
 
     def site_config(self, siteid):
         response = request(self, "SiteConfig", {"site-id" : siteid})
+        return etree.tostring(response)
+
+    def site_save(self, sitedtd):
+        response = self.request("SiteSave", appendelements=sitedtd)
         return etree.tostring(response)
 
     def site_delete(self, siteid):
@@ -277,12 +283,13 @@ class Connection():
         response = request(self, "VulnerabilityListing")
         return etree.tostring(response)
 
-
-
-    
     
     #adhoc report request parser
-    def ad_hoc_report_request(self, call, query, site_id=[]):
+    # By default API version 1.1.0 is used for the query, if you want to use
+    # a newer API version (for example to get access to some SQL dimensions
+    # and columns you can't see with 1.1.0, change api_version to something
+    # newer (like 1.3.2)
+    def ad_hoc_report_request(self, call, query, site_id=[], api_version='1.1.0'):
         """ Processes a Request for an API call """
         #Could be integrated into regular request, although it could complicate that function
         xml = etree.Element(call + "Request")
@@ -302,7 +309,7 @@ class Connection():
         #create filters
         filter_ver = etree.Element("filter")
         filter_ver.set('type','version')
-        filter_ver.set('id','1.1.0')
+        filter_ver.set('id',api_version)
 
         filter_query = etree.Element("filter")
         filter_query.set('type','query') 
@@ -330,7 +337,8 @@ class Connection():
 
         #flatten the xml object
         data=etree.tostring(xml)
-        print "Making Query:\n", data, "\n"
+        if print_query:
+            print "Making Query:\n", data, "\n"
         request = urllib2.Request(self.url + self.api, data)
         request.add_header('Content-Type', 'application/xml')
         
