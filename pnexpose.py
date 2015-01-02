@@ -14,7 +14,7 @@ def dump(obj):
       print "obj.%s = %s" % (attr, getattr(obj, attr))
       
 #Request parser
-def request(connection, call, parameters={}):
+def request(connection, call, parameters={}, appendelements=[]):
     """ Processes a Request for an API call """
     xml = etree.Element(call + "Request")
 
@@ -26,6 +26,9 @@ def request(connection, call, parameters={}):
     #parses parameters from calls
     for param,value in parameters.iteritems():
         xml.set(param, str(value))
+    
+    for el in appendelements:
+        xml.append(etree.fromstring(el))
     
     #makes request and returns response
     data=etree.tostring(xml)
@@ -73,7 +76,7 @@ class EngineSummary():
 # Creates class for the client
 class Connection():
     def __init__(self, server, port, username, password):
-        """ nexposeClient Class init call """
+        """ Connection Class init call """
         self.server = server
         self.port = port
         self.username = username
