@@ -137,8 +137,8 @@ class Connection():
         response = request(self, "AssetGroupListing")
         return etree.tostring(response)
 
-    def asset_group_save(self, groupid):
-        response = request(self, "AssetGroupSave", {"group-id" : groupid})
+    def asset_group_save(self, groupdtd):
+        response = self.request("AssetGroupSave", appendelements=groupdtd)
         return etree.tostring(response)
 
     def device_delete(self, deviceid):
