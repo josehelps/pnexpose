@@ -5,7 +5,6 @@ from lxml import etree
 from lxml import objectify
 import random
 import base64
-import sys
 
 print_query = False
 
