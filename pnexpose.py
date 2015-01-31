@@ -174,7 +174,7 @@ class Connection():
         return response.attrib['success']
 
     def report_generate(self, reportid):
-        response = request("ReportGenerate", {'report-id' : reportid})
+        response = request(self, "ReportGenerate", {'report-id' : reportid})
         return etree.tostring(response)
 
     def report_listing(self):
