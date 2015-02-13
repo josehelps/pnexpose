@@ -121,14 +121,14 @@ class Connection():
 
     # Contains a custom adhoc report request.
     def adhoc_report(self, query, site_ids=[], api_version='1.1.0',
-            scan_ids=[]):
+            scan_ids=[], device_ids=[]):
         '''
         Execute an adhoc SQL query using the API. Additional parameters can
         be supplied to the function to apply filters to the request.
         '''
         response = self.ad_hoc_report_request("ReportAdhocGenerate", query,
             site_ids=site_ids, api_version=api_version,
-            scan_ids=scan_ids)
+            scan_ids=scan_ids, device_ids=device_ids)
         return response
 
     def asset_group_config(self, groupid):
@@ -301,7 +301,7 @@ class Connection():
     # Additionally, site_ids and scan_ids can be passed into the function to
     # apply additional filters to the report request.
     def ad_hoc_report_request(self, call, query, site_ids=[],
-        api_version='1.1.0', scan_ids=[]):
+        api_version='1.1.0', scan_ids=[], device_ids=[]):
         xml = etree.Element(call + "Request")
 
         # If an authentication token exists add it to the request.
@@ -340,6 +340,13 @@ class Connection():
             filter_n = etree.Element('filter')
             filter_n.set('type', 'scan')
             filter_n.set('id', str(scan))
+            filters.append(filter_n)
+
+        # If device filters were supplied, add those.
+        for device in device_ids:
+            filter_n = etree.Element('filter')
+            filter_n.set('type', 'device')
+            filter_n.set('id', str(device))
             filters.append(filter_n)
 
         config.append(filters)
