@@ -119,10 +119,16 @@ class Connection():
         self.authtoken = response.attrib['session-id']
         return response
 
-    #Contains custom request
-    def adhoc_report(self,query,site_ids,api_version='1.1.0'):
-        """Takes in a query object in the for of SQL and an array with site ids"""
-        response = self.ad_hoc_report_request("ReportAdhocGenerate",query,site_ids,api_version)
+    # Contains a custom adhoc report request.
+    def adhoc_report(self, query, site_ids=[], api_version='1.1.0',
+            scan_ids=[]):
+        '''
+        Execute an adhoc SQL query using the API. Additional parameters can
+        be supplied to the function to apply filters to the request.
+        '''
+        response = self.ad_hoc_report_request("ReportAdhocGenerate", query,
+            site_ids=site_ids, api_version=api_version,
+            scan_ids=scan_ids)
         return response
 
     def asset_group_config(self, groupid):
@@ -286,81 +292,80 @@ class Connection():
         response = request(self, "VulnerabilityListing")
         return etree.tostring(response)
 
-    
-    #adhoc report request parser
+    # Adhoc Report Request Parser
     # By default API version 1.1.0 is used for the query, if you want to use
     # a newer API version (for example to get access to some SQL dimensions
     # and columns you can't see with 1.1.0, change api_version to something
     # newer (like 1.3.2)
-    def ad_hoc_report_request(self, call, query, site_id=[], api_version='1.1.0'):
-        """ Processes a Request for an API call """
-        #Could be integrated into regular request, although it could complicate that function
+    #
+    # Additionally, site_ids and scan_ids can be passed into the function to
+    # apply additional filters to the report request.
+    def ad_hoc_report_request(self, call, query, site_ids=[],
+        api_version='1.1.0', scan_ids=[]):
         xml = etree.Element(call + "Request")
 
-        #if it has a token it adds it to the request 
-        if(self.authtoken != ''):
-            xml.set('session-id',self.authtoken)
+        # If an authentication token exists add it to the request.
+        if (self.authtoken != ''):
+            xml.set('session-id', self.authtoken)
             xml.set('sync-id', str(random.randint(1,65535)))
 
-        #create configuration object
+        # Create the configuration object.
         config = etree.Element('AdhocReportConfig')
         config.set('format', 'sql')
 
-        #create object to store multiple filters 
-        filters = etree.Element("Filters")
+        # Create an object to potentially hold multiple filters.
+        filters = etree.Element('Filters')
 
-        #create filters
-        filter_ver = etree.Element("filter")
-        filter_ver.set('type','version')
-        filter_ver.set('id',api_version)
-
-        filter_query = etree.Element("filter")
-        filter_query.set('type','query') 
+        # Add the required filters.
+        filter_ver = etree.Element('filter')
+        filter_ver.set('type', 'version')
+        filter_ver.set('id', api_version)
+        filter_query = etree.Element('filter')
+        filter_query.set('type', 'query') 
         filter_query.set('id', query)
 
-        #append version and query filter to the query object
+        # Append version and query filter to the object.
         filters.append(filter_ver)
         filters.append(filter_query)
 
-        #add sites as filters as well
-        for site in site_id:
-            filter_n =''
-            filter_n = site
-            filter_n = etree.Element("filter")
-            filter_n.set('type','site')
-            filter_n.set('id',str(site))
-
-            #append it to the query object
+        # If site filters were supplied, add those.
+        for site in site_ids:
+            filter_n = etree.Element('filter')
+            filter_n.set('type', 'site')
+            filter_n.set('id', str(site))
             filters.append(filter_n)
         
-        #put the queries as part of the config object
+        # If scan filters were supplied, add those.
+        for scan in scan_ids:
+            filter_n = etree.Element('filter')
+            filter_n.set('type', 'scan')
+            filter_n.set('id', str(scan))
+            filters.append(filter_n)
+
         config.append(filters)
-        #place the config inside the request object
+
         xml.append(config)
 
-        #flatten the xml object
         data=etree.tostring(xml)
         if print_query:
-            print "Making Query:\n", data, "\n"
+            print 'Making Query:\n', data, '\n'
         request = urllib2.Request(self.url + self.api, data)
         request.add_header('Content-Type', 'application/xml')
         
-        #make request
+        # Make the request.
         response = urllib2.urlopen(request)
         response_data = response.read()
 
-        #because the response comes back in base64 and with a header
-        #we need to truncate the header and parse the base64
-        #remove the first 230 characters - header
-        #the response should be a csv output
+        # We get the response back in base64 with a header. We need to
+        # truncate the header and parse the base64 encoded data out. Just
+        # omit the first 230 characters and the response remaining is csv.
         
-        error = 'error parsing response, there might have been a problem see response\n' + response_data
         try: 
             decoded_data = base64.b64decode(response_data[230:])
             return decoded_data
         except:
-            print 'error parsing response - there might have been a problem, see response from server below\n' + response_data
-        
-
-
-
+            # XXX We should probably raise an exception here so the
+            # calling function can interpret the failure.
+            print 'error parsing response - there might have been a ' + \
+                'problem, see response from server below\n' + response_data
+        return None
