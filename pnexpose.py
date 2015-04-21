@@ -239,6 +239,11 @@ class Connection():
         response = request(self, "SiteDeviceListing", {"site-id" : siteid})
         return etree.tostring(response)
 
+    def site_device_scan(self, siteid, sitedtd):
+        response = request(self, "SiteDevicesScan", {"site-id" : siteid}, \
+            appendelements=sitedtd)
+        return etree.tostring(response)
+
     def list_sites(self):
         response = request(self, "SiteListing")
         sites = objectify.fromstring(etree.tostring(response))
