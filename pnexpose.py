@@ -5,6 +5,7 @@ from lxml import etree
 from lxml import objectify
 import random
 import base64
+import ssl
 
 print_query = False
 
@@ -34,8 +35,8 @@ def request(connection, call, parameters={}, appendelements=[]):
     data=etree.tostring(xml)
     request = urllib2.Request(connection.url + connection.api, data)
     request.add_header('Content-Type', 'text/xml')
-    
-    response = urllib2.urlopen(request)
+    gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+    response = urllib2.urlopen(request, context=gcontext)
     response = etree.XML(response.read())
     return response
         
@@ -112,7 +113,8 @@ class Connection():
         request = urllib2.Request(self.url + self.api, data)
         request.add_header('Content-Type', 'text/xml')
         
-        response = urllib2.urlopen(request)
+        gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        response = urllib2.urlopen(request, context=gcontext)
         response = etree.XML(response.read())
    
         # response = request("Login", {'user-id' : self.username, 'password' : self.password})
@@ -154,7 +156,8 @@ class Connection():
     def download_report(self, reporturl):
         req = urllib2.Request(self.baseurl + reporturl)
         req.add_header('Cookie', 'nexposeCCSessionID=%s' % self.token)
-        response = urllib2.urlopen(req)
+        gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        response = urllib2.urlopen(req,context=gcontext)
         resxml = etree.XML(response.read())
         return resxml
 
@@ -360,7 +363,8 @@ class Connection():
         request.add_header('Content-Type', 'application/xml')
         
         # Make the request.
-        response = urllib2.urlopen(request)
+        gcontext = ssl.SSLContext(ssl.PROTOCOL_TLSv1)
+        response = urllib2.urlopen(request, context=gcontext)
         response_data = response.read()
 
         # We get the response back in base64 with a header. We need to
