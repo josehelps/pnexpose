@@ -29,7 +29,7 @@ def request(connection, call, parameters={}, appendelements=[]):
         xml.set(param, str(value))
     
     for el in appendelements:
-        xml.append(etree.fromstring(el))
+        xml.append(el)
     
     #makes request and returns response
     data=etree.tostring(xml)
@@ -74,6 +74,91 @@ class EngineSummary():
         self.status = str(status)
         self.scope = str(scope)
 
+class Tasks():
+    def __init__(self, active, completed, pending):
+        self.active = int(active)
+        self.completed = int(completed)
+        self.pending = int(pending)
+        
+class Nodes():
+    def __init__(self, filtered, live, unresolved, other, dead):
+        self.filtered = int(filtered)
+        self.live = int(live)
+        self.unresolved = int(unresolved)
+        self.other = int(other)
+        self.dead = int(dead)
+        
+class Vulnerability():
+    def __init__(self, status, count, severity = 0):
+        self.status = status
+        self.count = int(count)
+        self.severity = int(severity)
+        
+class ScanSummary():        
+    def __init__(self, scanid, siteid, engineid, name, status, tasks, nodes, vulns, startTime, endTime = None):
+        self.scanid = int(scanid)
+        self.siteid = int(siteid)
+        self.engineid = int(engineid)
+        self.name = name
+        self.status = status
+        self.startTime = startTime
+        self.endTime = endTime
+        self.tasks = tasks
+        self.nodes = nodes
+        self.vulns = vulns
+
+class UserSummary():
+    def __init__(self, id, authSource, authModule, userName, fullName, email, administrator, disabled, locked, siteCount, groupCount):
+        self.id = int(id)
+        self.authSource = authSource
+        self.authModule = authModule
+        self.userName = userName
+        self.fullName = fullName
+        self.email = email
+        self.administrator = int(administrator)
+        self.disabled = int(disabled)
+        self.locked = int(locked)
+        self.siteCount = int(siteCount)
+        self.groupCount = int(groupCount)
+        
+class User():
+    def __init__(self, id, rolename, authsrcid, name, fullname, email, enabled):
+        self.id = int(id)
+        self.rolename = rolename
+        self.authsrcid = authsrcid
+        self.name = name
+        self.fullname = fullname
+        self.email = email
+        self.enabled = bool(enabled)
+        
+        # There is currently no way to retrieve the list of sites that a user has access to via the Nexpose API.
+        # The methods in the official Nexpose Ruby Gem default to showing True for allSites/allGroups access
+        # if the role name is 'global-admin' and False if not. This does the same thing, but you can set these
+        # values manually before saving if needed.
+        if self.rolename == "global-admin":
+            self.allSites = True
+            self.allGroups = True
+        else:
+            self.allSites = False
+            self.allGroups = False
+            
+        
+    def save(self, conn):
+        userconfig = etree.Element("UserConfig")
+        userconfig.set("id", str(self.id))
+        userconfig.set("role-name", self.rolename)
+        userconfig.set("authsrcid", str(self.authsrcid))
+        userconfig.set("name", self.name)
+        userconfig.set("fullname", self.fullname)
+        userconfig.set("email", self.email)
+        userconfig.set("enabled", str(int(self.enabled)))
+        userconfig.set("allSites", str(self.allSites))
+        userconfig.set("allGroups", str(self.allGroups))
+
+        print etree.tostring(userconfig)
+        response = request(conn, "UserSave", appendelements=[userconfig])
+        return response
+        
 # Creates class for the client
 class Connection():
     def __init__(self, server, port, username, password):
@@ -146,7 +231,7 @@ class Connection():
         return etree.tostring(response)
 
     def asset_group_save(self, groupdtd):
-        response = request(self, "AssetGroupSave", appendelements=groupdtd)
+        response = request(self, "AssetGroupSave", appendelements=[groupdtd])
         return etree.tostring(response)
 
     def device_delete(self, deviceid):
@@ -163,7 +248,23 @@ class Connection():
 
     def engine_activity(self, engineid):
         response = request(self, "EngineActivity", {"engine-id" : engineid})
-        return etree.tostring(response)
+        activity = objectify.fromstring(etree.tostring(response))
+        ss = activity.ScanSummary[0]
+        vulns = []
+        for vuln in ss.vulnerabilities:
+            vulns.append(Vulnerability(**dict(vuln.items())))
+
+        summaryItems = dict(ss.items())
+        summaryItems['siteid'] = summaryItems['site-id']
+        del summaryItems['site-id']
+        summaryItems['scanid'] = summaryItems['scan-id']
+        del summaryItems['scan-id']
+        summaryItems['engineid'] = summaryItems['engine-id']
+        del summaryItems['engine-id']
+        summaryItems['tasks'] = Tasks(**dict(ss.tasks.items()))
+        summaryItems['nodes'] = Nodes(**dict(ss.nodes.items()))
+        summaryItems['vulns'] = vulns
+        return ScanSummary(**summaryItems)
 
     def list_engines(self):
         response = request(self, "EngineListing")
@@ -204,7 +305,26 @@ class Connection():
 
     def scan_activity(self):
         response = request(self, "ScanActivity")
-        return etree.tostring(response)
+        scans = objectify.fromstring(etree.tostring(response))
+        scanSummaryList = []
+        for scan in scans.ScanSummary:
+            vulns = []
+            for vuln in scan.vulnerabilities:
+                vulns.append(Vulnerability(**dict(vuln.items())))
+
+            summaryItems = dict(scan.items())
+            summaryItems['siteid'] = summaryItems['site-id']
+            del summaryItems['site-id']
+            summaryItems['scanid'] = summaryItems['scan-id']
+            del summaryItems['scan-id']
+            summaryItems['engineid'] = summaryItems['engine-id']
+            del summaryItems['engine-id']
+            summaryItems['tasks'] = Tasks(**dict(scan.tasks.items()))
+            summaryItems['nodes'] = Nodes(**dict(scan.nodes.items()))
+            summaryItems['vulns'] = vulns
+            scanSummaryList.append(ScanSummary(**summaryItems))
+            
+        return scanSummaryList
 
     def scan_pause(self, scanid):
         response = request(self, "ScanPause", {'scan-id' : scanid})
@@ -231,7 +351,7 @@ class Connection():
         return etree.tostring(response)
 
     def site_save(self, sitedtd):
-        response = request(self, "SiteSave", appendelements=sitedtd)
+        response = request(self, "SiteSave", appendelements=[sitedtd])
         return etree.tostring(response)
 
     def site_delete(self, siteid):
@@ -261,7 +381,27 @@ class Connection():
 
     def site_scan_history(self, siteid):
         response = request(self, "SiteScanHistory", {"site-id" : siteid})
-        return etree.tostring(response)
+        history = objectify.fromstring(etree.tostring(response))
+        scans = []
+        
+        for scan in history.ScanSummary:
+            vulns = []
+            for vuln in scan.vulnerabilities:
+                vulns.append(Vulnerability(**dict(vuln.items())))
+
+            summaryItems = dict(scan.items())
+            summaryItems['siteid'] = summaryItems['site-id']
+            del summaryItems['site-id']
+            summaryItems['scanid'] = summaryItems['scan-id']
+            del summaryItems['scan-id']
+            summaryItems['engineid'] = summaryItems['engine-id']
+            del summaryItems['engine-id']
+            summaryItems['tasks'] = Tasks(**dict(scan.tasks.items()))
+            summaryItems['nodes'] = Nodes(**dict(scan.nodes.items()))
+            summaryItems['vulns'] = vulns
+            scans.append(ScanSummary(**summaryItems))
+            
+        return scans
 
     def system_update(self):
         response = request(self, "SystemUpdate")
@@ -277,7 +417,7 @@ class Connection():
 
     def user_config(self, userid):
         response = request(self, "UserConfig", {"id" : userid})
-        return etree.tostring(response)
+        return User(*response[0].values())
 
     def user_delete(self, userid):
         response = request(self, "UserDelete", {"id" : userid})
@@ -285,7 +425,11 @@ class Connection():
 
     def user_listing(self):
         response = request(self, "UserListing")
-        return etree.tostring(response)
+        users = []
+        for user in response:
+            users.append(UserSummary(*user.values()))
+            
+        return users
 
     def vulnerability_details(self, vulnid):
         response = request(self, "VulnerabilityDetails", {"vuln-id" : vulnid})
