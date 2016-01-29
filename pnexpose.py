@@ -29,7 +29,7 @@ def request(connection, call, parameters={}, appendelements=[]):
         xml.set(param, str(value))
     
     for el in appendelements:
-        xml.append(etree.fromstring(el))
+        xml.append(el)
     
     #makes request and returns response
     data=etree.tostring(xml)
@@ -131,6 +131,18 @@ class User():
         self.email = email
         self.enabled = bool(enabled)
         
+        # There is currently no way to retrieve the list of sites that a user has access to via the Nexpose API.
+        # The methods in the official Nexpose Ruby Gem default to showing True for allSites/allGroups access
+        # if the role name is 'global-admin' and False if not. This does the same thing, but you can set these
+        # values manually before saving if needed.
+        if self.rolename == "global-admin":
+            self.allSites = True
+            self.allGroups = True
+        else:
+            self.allSites = False
+            self.allGroups = False
+            
+        
     def save(self, conn):
         userconfig = etree.Element("UserConfig")
         userconfig.set("id", str(self.id))
@@ -140,12 +152,8 @@ class User():
         userconfig.set("fullname", self.fullname)
         userconfig.set("email", self.email)
         userconfig.set("enabled", str(int(self.enabled)))
-        if self.rolename == "global-admin":
-            userconfig.set("all_sites", True)
-            userconfig.set("all_groups", True)
-        else:
-            userconfig.set("all_sites", False)
-            userconfig.set("all_groups", False)
+        userconfig.set("allSites", str(self.allSites))
+        userconfig.set("allGroups", str(self.allGroups))
 
         print etree.tostring(userconfig)
         response = request(conn, "UserSave", appendelements=[userconfig])
