@@ -362,6 +362,11 @@ class Connection():
         response = request(self, "SiteDeviceListing", {"site-id" : siteid})
         return etree.tostring(response)
 
+    def site_device_scan(self, siteid, sitedtd):
+        response = request(self, "SiteDevicesScan", {"site-id" : siteid}, \
+            appendelements=sitedtd)
+        return etree.tostring(response)
+
     def list_sites(self):
         response = request(self, "SiteListing")
         sites = objectify.fromstring(etree.tostring(response))
@@ -516,6 +521,12 @@ class Connection():
         # omit the first 230 characters and the response remaining is csv.
         
         try: 
+            # The 230 byte offset only strips the header on the response, also
+            # strip the last line which is the MIME boundary.
+            #
+            # XXX This should be handled a lot better by properly parsing the
+            # response returned by the server.
+            response_data = '\r'.join(response_data.split('\r')[:-2])
             decoded_data = base64.b64decode(response_data[230:])
             return decoded_data
         except:
