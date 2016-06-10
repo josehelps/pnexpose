@@ -13,7 +13,7 @@ query = """SELECT fa.vulnerability_instances, fa.affected_assets, fa.most_recent
 
 
 #creates a nexposeClient object
-nexposeClient = pnexpose.nexposeClient(serveraddr, port, username, password)
+nexposeClient = pnexpose.nexposeConnection(serveraddr, port, username, password)
 
 #EXAMPLE 1
 #Print reports available 
