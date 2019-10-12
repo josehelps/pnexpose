@@ -107,6 +107,12 @@ class ScanSummary():
         self.nodes = nodes
         self.vulns = vulns
 
+class ScanStatus():
+    def __init__(self, status, engineid, scanid):
+        self.status = status
+        self.engineid = engineid
+        self.scanid = scanid
+        
 class UserSummary():
     def __init__(self, id, authSource, authModule, userName, fullName, email, administrator, disabled, locked, siteCount, groupCount):
         self.id = int(id)
@@ -336,11 +342,27 @@ class Connection():
 
     def scan_statistics(self, scanid):
         response = request(self, "ScanStatistics", {'scan-id' : scanid})
-        return etree.tostring(response)
+        ss = objectify.fromstring(etree.tostring(response)).ScanSummary
+        vulns = []
+        for vuln in ss.vulnerabilities:
+            vulns.append(Vulnerability(**dict(vuln.items())))
+
+        summaryItems = dict(ss.items())
+        summaryItems['siteid'] = summaryItems['site-id']
+        del summaryItems['site-id']
+        summaryItems['scanid'] = summaryItems['scan-id']
+        del summaryItems['scan-id']
+        summaryItems['engineid'] = summaryItems['engine-id']
+        del summaryItems['engine-id']
+        summaryItems['tasks'] = Tasks(**dict(ss.tasks.items()))
+        summaryItems['nodes'] = Nodes(**dict(ss.nodes.items()))
+        summaryItems['vulns'] = vulns
+        return ScanSummary(**summaryItems)
 
     def scan_status(self, scanid):
         response = request(self, "ScanStatus", {'scan-id' : scanid})
-        return etree.tostring(response)
+        status = dict(objectify.fromstring(etree.tostring(response)).items())
+        return ScanStatus(status['status'], status['engine-id'], status['scan-id'])
 
     def scan_stop(self, scanid):
         response = request(self, "ScanStop", {'scan-id' : scanid})
