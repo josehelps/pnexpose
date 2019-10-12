@@ -516,7 +516,7 @@ class Connection():
         # omit the first 230 characters and the response remaining is csv.
         
         try: 
-            decoded_data = base64.b64decode(response_data[230:])
+            decoded_data = base64.b64decode(response_data[230:].split("--")[0])
             return decoded_data
         except:
             # XXX We should probably raise an exception here so the
